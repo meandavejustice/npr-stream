@@ -1,8 +1,8 @@
 var path = require('path');
 var levelup = require('level');
-var db = levelup('../db', {valueEncoding: 'json'});
-var getStations = require('./stations');
-var getFeed = require('./feed');
+var db = levelup('./db', {valueEncoding: 'json'});
+var getStations = require('./lib/stations');
+var getFeed = require('./lib/feed');
 var stationFile = path.normalize('data/podcast_directory.xml');
 
 getStations(stationFile, function(err, stations) {

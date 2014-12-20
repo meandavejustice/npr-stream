@@ -4,13 +4,17 @@ var Speaker = require('speaker');
 var lame = require('lame');
 var request = require('request');
 var orm = require('./orm');
+var currentStream;
 
 var screen = blessed.screen();
-var speaker = new Speaker({
-  channels: 2,
-  bitDepth: 16,
-  sampleRate: 44100
-});
+
+function getSpeaker() {
+  return new Speaker({
+    channels: 2,
+    bitDepth: 16,
+    sampleRate: 44100
+  });
+}
 
 fs.readFile('./computer.txt', {"encoding": "utf8"}, function(err, content) {
   var logo = blessed.box({
@@ -65,7 +69,10 @@ fs.readFile('./computer.txt', {"encoding": "utf8"}, function(err, content) {
         } else {
           genShowList(ev.content);
         }
-      })
+      });
+      screen.key(['b'], function(ch, key) {
+        getStartMenu('Welcome');
+      });
     });
   }
 
@@ -75,8 +82,7 @@ fs.readFile('./computer.txt', {"encoding": "utf8"}, function(err, content) {
       var urls = {};
       var titles = [];
 
-      console.log(station, '::::', shows);
-
+      if (!shows) return;
       shows.forEach(function(show) {
         urls[show.title] = show.url;
         titles.push(show.title);
@@ -88,15 +94,33 @@ fs.readFile('./computer.txt', {"encoding": "utf8"}, function(err, content) {
         if (url === undefined) {
           process.exit(1);
         }
+        if (currentStream) stop();
         play(url);
-      })
+      });
+
+      screen.key(['b'], function(ch, key) {
+        genStationList();
+      });
+      screen.key(['x'], function(ch, key) {
+        stop();
+      });
     })
   }
 
   function play(url) {
-    request(url)
+    debugger;
+    currentStream = request(url)
     .pipe(new lame.Decoder())
-    .pipe(speaker);
+    .pipe(getSpeaker());
+  }
+
+  function pause() {
+    currentStream.pause();
+  }
+
+  function stop() {
+    currentStream.end();
+    currentStream = null;
   }
 
   function getStartMenu(header, items) {
@@ -109,6 +133,7 @@ fs.readFile('./computer.txt', {"encoding": "utf8"}, function(err, content) {
         process.exit(0);
       }
     });
+
     // list.off('select');
     screen.append(logo);
     screen.append(list);

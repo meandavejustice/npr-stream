@@ -11,7 +11,6 @@ function getShows(station, cb) {
   db.get(station, function(err, shows) {
     if (err) {
       cb(err);
-      cb = null;
     }
 
     cb(null, shows);
